@@ -95,6 +95,7 @@ class Word2Vec:
         self.embedding_array = np.load("data/embeddings_array.numpy")
             
     @classmethod
+    @timeit
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.

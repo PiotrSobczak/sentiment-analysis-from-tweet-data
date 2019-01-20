@@ -113,7 +113,7 @@ class DataLoader:
             batch_labels = [1] * BATCH_SIZE_HALF + [0] * BATCH_SIZE_HALF
             batch_list.append({"inputs": batch_input, "labels": batch_labels})
 
-        TRAIN_BATCHES = 1
+        TRAIN_BATCHES = 190
         VAL_BATCHES = 3000
         TEST_BATCHES = 3000
 

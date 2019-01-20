@@ -15,7 +15,7 @@ class RNN(nn.Module):
     def forward(self, x):
 
         # x = [sent len, batch size, emb dim]
-        x = torch.tensor(x)
+        x = torch.tensor(x).float()
         output, (hidden, cell) = self.lstm(x)
 
         # output = [sent len, batch size, hid dim * num directions]
@@ -28,7 +28,7 @@ class RNN(nn.Module):
         #hidden = torch.cat((hidden[-2, :, :], hidden[-1, :, :]), dim=1)
         # hidden = [batch size, hid dim * num directions]
         hidden = hidden[-1, :, :]
-        hidden = hidden.squeeze(0)
+        hidden = hidden.squeeze(0).float()
         return self.fc(hidden)
 
 
@@ -58,7 +58,7 @@ def train(model, train_loader, optimizer, criterion):
         predictions = model(batch).squeeze(1)
         #print(predictions)
 
-        labels = torch.tensor(labels).double()
+        labels = torch.tensor(labels).float()
         loss = criterion(predictions, labels)
         acc = binary_accuracy(predictions, labels)
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     OUTPUT_DIM = 1
 
     model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM)
-    model.double()
+    model.float()
 
     optimizer = optim.Adam(model.parameters(), lr=0.00001)
 
