@@ -6,7 +6,6 @@ def timeit(method):
         ts = time.time()
         result = method(*args, **kw)
         te = time.time()
-
         print ("{} - {} sec".format(method.__name__, te-ts))
         return result
 

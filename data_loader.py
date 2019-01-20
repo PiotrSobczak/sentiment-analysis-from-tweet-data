@@ -4,6 +4,8 @@ from preprocessing import Preprocessor
 from utils import timeit
 from word2vecReader import Word2Vec, Word2VecMini
 import numpy as np
+import pickle
+import torch
 
 EMOTION_CLASSES = ["happiness", "anger", "sadness", "neutral"]
 
@@ -133,19 +135,18 @@ class BatchLoader:
     def __init__(self, raw_batch_list, sequence_len=30, batch_size=64, embedding_size=400):
         self._raw_batch_list = raw_batch_list
         self._size = len(raw_batch_list)
-        self._next_batch_index = 0
         self._batch_size = batch_size
         self._embedding_size = embedding_size
         self._sequence_len = sequence_len
+        self._next_batch_index = 1
+        self._next_batch, self._next_labels = self._create_batch(raw_batch_list[0])
 
-    @property
-    def size(self):
+    def __len__(self):
         return self._size
 
-    def next(self):
-        raw_batch = self._raw_batch_list[self._next_batch_index]
-        self._next_batch_index = (self._next_batch_index + 1) if self._next_batch_index + 1 < self._size else 0
-        return self._create_batch(raw_batch)
+    def __call__(self):
+        for raw_batch in self._raw_batch_list[1:]:
+            yield self._create_batch(raw_batch)
 
     def _create_batch(self, raw_batch):
         batch = np.zeros((self._batch_size, self._sequence_len, self._embedding_size))
@@ -158,7 +159,8 @@ class BatchLoader:
                 # else:
                 #     sentence_embedded[word_id] = np.zeros((1, self._embedding_size))
             batch[sentence_id] = sentence_embedded
-        return batch.swapaxes(0,1), np.array(raw_batch["labels"])
+
+        return batch.swapaxes(0,1), torch.tensor(np.array(raw_batch["labels"])).float()
 
 
 if __name__ == "__main__":

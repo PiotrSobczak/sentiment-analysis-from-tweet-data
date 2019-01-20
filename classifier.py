@@ -5,6 +5,7 @@ from data_loader import BatchLoader, DataLoader
 import torch.tensor
 from utils import timeit
 
+
 class RNN(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, output_dim):
         super().__init__()
@@ -15,7 +16,8 @@ class RNN(nn.Module):
     def forward(self, x):
 
         # x = [sent len, batch size, emb dim]
-        x = torch.tensor(x).float()
+        #x = torch.tensor(x).float()
+        x = torch.cuda.FloatTensor(x)
         output, (hidden, cell) = self.lstm(x)
 
         # output = [sent len, batch size, hid dim * num directions]
@@ -44,21 +46,17 @@ def binary_accuracy(preds, y):
     return acc
 
 @timeit
-def train(model, train_loader, optimizer, criterion):
+def train(model, iterator, optimizer, criterion):
     epoch_loss = 0
     epoch_acc = 0
 
     model.train()
 
-    for batch_id in range(train_loader.size):
-        batch, labels = train_loader.next()
-
+    for batch, labels in iterator():
         optimizer.zero_grad()
 
         predictions = model(batch).squeeze(1)
-        #print(predictions)
 
-        labels = torch.tensor(labels).float()
         loss = criterion(predictions, labels)
         acc = binary_accuracy(predictions, labels)
 
@@ -68,9 +66,9 @@ def train(model, train_loader, optimizer, criterion):
         epoch_loss += loss.item()
         epoch_acc += acc.item()
 
-    return epoch_loss / train_loader.size, epoch_acc / train_loader.size
+    return epoch_loss / len(iterator), epoch_acc / len(iterator)
 
-
+@timeit
 def evaluate(model, iterator, criterion):
     epoch_loss = 0
     epoch_acc = 0
@@ -78,12 +76,12 @@ def evaluate(model, iterator, criterion):
     model.eval()
 
     with torch.no_grad():
-        for batch in iterator:
-            predictions = model(batch.text).squeeze(1)
+        for batch, labels in iterator():
+            predictions = model(batch).squeeze(1)
 
-            loss = criterion(predictions, batch.label)
+            loss = criterion(predictions, labels)
 
-            acc = binary_accuracy(predictions, batch.label)
+            acc = binary_accuracy(predictions, labels)
 
             epoch_loss += loss.item()
             epoch_acc += acc.item()
@@ -116,14 +114,15 @@ if __name__ == "__main__":
 
     N_EPOCHS = 5000
 
-    train_raw, val, test = DataLoader.get_data_in_batches()
+    train_raw, val_raw, test = DataLoader.get_data_in_batches()
     train_loader = BatchLoader(train_raw)
+    validation_iterator = BatchLoader(val_raw)
 
     for epoch in range(N_EPOCHS):
+        valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
         train_loss, train_acc = train(model, train_loader, optimizer, criterion)
-        #valid_loss, valid_acc = evaluate(model, valid_iterator, criterion)
 
-        print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%') # | Val. Loss: {valid_loss:.3f} | Val. Acc: {valid_acc*100:.2f}% |')
+        print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}% | Val. Loss: {valid_loss:.3f} | Val. Acc: {valid_acc*100:.2f}% |')
 
         # test_loss, test_acc = evaluate(model, test_iterator, criterion)
         #
