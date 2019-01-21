@@ -7,11 +7,12 @@ from utils import timeit
 
 
 class RNN(nn.Module):
-    def __init__(self, embedding_dim, hidden_dim, output_dim):
+    def __init__(self, embedding_dim, hidden_dim, output_dim, dropout):
         super().__init__()
 
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=2)
         self.fc = nn.Linear(hidden_dim, output_dim)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
 
@@ -30,6 +31,7 @@ class RNN(nn.Module):
         #hidden = torch.cat((hidden[-2, :, :], hidden[-1, :, :]), dim=1)
         # hidden = [batch size, hid dim * num directions]
         hidden = hidden[-1, :, :]
+        hidden = self.dropout(hidden)
         hidden = hidden.squeeze(0).float()
         return self.fc(hidden)
 
@@ -99,13 +101,14 @@ if __name__ == "__main__":
         torch.set_default_tensor_type('torch.FloatTensor')
 
     EMBEDDING_DIM = 400
-    HIDDEN_DIM = 64
+    HIDDEN_DIM = 256
     OUTPUT_DIM = 1
+    DROPOUT = 0.5
 
-    model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM)
+    model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM, DROPOUT)
     model.float()
 
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     criterion = nn.BCEWithLogitsLoss()
     model = model.to(device)
