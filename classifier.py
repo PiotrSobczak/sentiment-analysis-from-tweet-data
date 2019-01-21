@@ -5,6 +5,8 @@ from data_loader import BatchLoader, DataLoader
 import torch.tensor
 from utils import timeit
 import json
+import os
+from time import gmtime, strftime
 
 EMBEDDING_DIM = 400
 HIDDEN_DIM = 64
@@ -12,9 +14,10 @@ OUTPUT_DIM = 1
 DROPOUT = 0.5
 N_EPOCHS = 100
 PATIENCE = 3
-MODEL_PATH = "data/model"
-MODEL_CONFIG = "{}.config".format(MODEL_PATH)
-MODEL_WEIGHTS = "{}.torch".format(MODEL_PATH)
+MODEL_PATH = "models"
+MODEL_RUN_PATH = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
+MODEL_CONFIG = "{}/model.config".format(MODEL_RUN_PATH)
+MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
 
 
 class RNN(nn.Module):
@@ -115,6 +118,8 @@ def evaluate(model, iterator, criterion):
 
 
 if __name__ == "__main__":
+    os.makedirs(MODEL_RUN_PATH, exist_ok=True)
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     if device == "cuda":
         torch.set_default_tensor_type('torch.cuda.FloatTensor')

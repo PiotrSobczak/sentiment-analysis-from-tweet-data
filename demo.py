@@ -27,7 +27,7 @@ def demo(text):
     text = Preprocessor.preprocess_one(text)
     text_embedded = Word2VecMini.get_sentence_embedding(text, 30)
     text_embedded = np.expand_dims(text_embedded, 0).swapaxes(0, 1)
-    model = load_model("data/model")
+    model = load_model("CONFIGURE THIS PATH")
 
     with torch.no_grad():
         sentiment = model(text_embedded)
