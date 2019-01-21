@@ -61,7 +61,15 @@ def train(model, iterator, optimizer, criterion):
         loss = criterion(predictions, labels)
         acc = binary_accuracy(predictions, labels)
 
-        loss.backward()
+        l1_crit = nn.L1Loss(size_average=False)
+        reg_loss = 0
+        for param in model.parameters():
+            reg_loss += l1_crit(param)
+
+        factor = 0.0005
+        total_loss = loss+ factor * reg_loss
+
+        total_loss.backward()
         optimizer.step()
 
         epoch_loss += loss.item()
@@ -98,7 +106,7 @@ if __name__ == "__main__":
         torch.set_default_tensor_type('torch.FloatTensor')
 
     EMBEDDING_DIM = 400
-    HIDDEN_DIM = 256
+    HIDDEN_DIM = 64
     OUTPUT_DIM = 1
 
     model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM)
@@ -110,9 +118,9 @@ if __name__ == "__main__":
     model = model.to(device)
     criterion = criterion.to(device)
 
-    N_EPOCHS = 1000
+    N_EPOCHS = 100
     MODEL_PATH = "data/model.torch"
-    PATIENCE = 5
+    PATIENCE = 3
 
     best_valid_loss = 999
     epochs_without_improvement = 0
@@ -123,7 +131,7 @@ if __name__ == "__main__":
     test_iterator = BatchLoader(test_raw)
 
     for epoch in range(N_EPOCHS):
-        if epochs_without_improvement > PATIENCE:
+        if epochs_without_improvement == PATIENCE:
             break
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
         print(f'| Epoch: {epoch+1:02} | Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}%')
