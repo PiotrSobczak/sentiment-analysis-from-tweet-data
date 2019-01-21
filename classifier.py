@@ -61,15 +61,8 @@ def train(model, iterator, optimizer, criterion):
         loss = criterion(predictions, labels)
         acc = binary_accuracy(predictions, labels)
 
-        l1_crit = nn.L1Loss(size_average=False)
-        reg_loss = 0
-        for param in model.parameters():
-            reg_loss += l1_crit(param)
+        loss.backward()
 
-        factor = 0.0005
-        total_loss = loss+ factor * reg_loss
-
-        total_loss.backward()
         optimizer.step()
 
         epoch_loss += loss.item()
@@ -112,7 +105,7 @@ if __name__ == "__main__":
     model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM)
     model.float()
 
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=0.001)
 
     criterion = nn.BCEWithLogitsLoss()
     model = model.to(device)
@@ -133,8 +126,9 @@ if __name__ == "__main__":
     for epoch in range(N_EPOCHS):
         if epochs_without_improvement == PATIENCE:
             break
+
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
-        print(f'| Epoch: {epoch+1:02} | Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}%')
+        print(f'| Epoch: {epoch:02} | Val Loss: {valid_loss:.4f} | Val Acc: {valid_acc*100:.3f}%')
         if valid_loss < best_valid_loss:
             torch.save(model.state_dict(), MODEL_PATH)
             print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss, MODEL_PATH))
@@ -142,8 +136,10 @@ if __name__ == "__main__":
             epochs_without_improvement = 0
 
         train_loss, train_acc = train(model, train_iterator, optimizer, criterion)
-        print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%')
+        print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
+
         epochs_without_improvement += 1
+
 
     model.load_state_dict(torch.load(MODEL_PATH))
     test_loss, test_acc = evaluate(model, test_iterator, criterion)
