@@ -4,11 +4,31 @@ import torch.optim as optim
 from data_loader import BatchLoader, DataLoader
 import torch.tensor
 from utils import timeit
+import json
+
+EMBEDDING_DIM = 400
+HIDDEN_DIM = 64
+OUTPUT_DIM = 1
+DROPOUT = 0.5
+N_EPOCHS = 100
+PATIENCE = 3
+MODEL_PATH = "data/model"
+MODEL_CONFIG = "{}.config".format(MODEL_PATH)
+MODEL_WEIGHTS = "{}.torch".format(MODEL_PATH)
 
 
 class RNN(nn.Module):
-    def __init__(self, embedding_dim, hidden_dim, output_dim, dropout):
+    def __init__(self, embedding_dim=EMBEDDING_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM, dropout=DROPOUT, config=None):
         super().__init__()
+
+        if config is not None:
+            embedding_dim = int(config["embedding_dim"])
+            hidden_dim = int(config["hidden_dim"])
+            dropout = float(config["dropout"])
+            print("Loaded custom config")
+        else:
+            json.dump({"embedding_dim": embedding_dim, "hidden_dim": hidden_dim, "dropout": dropout}, open(MODEL_CONFIG, "w"))
+            print("Saved model config to {}".format(MODEL_CONFIG))
 
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=2)
         self.fc = nn.Linear(hidden_dim, output_dim)
@@ -17,7 +37,6 @@ class RNN(nn.Module):
     def forward(self, x):
 
         # x = [sent len, batch size, emb dim]
-        #x = torch.tensor(x).float()
         x = torch.cuda.FloatTensor(x)
         output, (hidden, cell) = self.lstm(x)
 
@@ -64,7 +83,7 @@ def train(model, iterator, optimizer, criterion):
         for param in model.parameters():
             reg_loss += param.norm(2)
 
-        total_loss = loss + 0.001*reg_loss
+        total_loss = loss + 0.00001*reg_loss
         total_loss.backward()
 
         optimizer.step()
@@ -102,11 +121,6 @@ if __name__ == "__main__":
     else:
         torch.set_default_tensor_type('torch.FloatTensor')
 
-    EMBEDDING_DIM = 400
-    HIDDEN_DIM = 256
-    OUTPUT_DIM = 1
-    DROPOUT = 0.5
-
     model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM, DROPOUT)
     model.float()
 
@@ -115,10 +129,6 @@ if __name__ == "__main__":
     criterion = nn.BCEWithLogitsLoss()
     model = model.to(device)
     criterion = criterion.to(device)
-
-    N_EPOCHS = 100
-    MODEL_PATH = "data/model.torch"
-    PATIENCE = 3
 
     best_valid_loss = 999
     epochs_without_improvement = 0
@@ -135,8 +145,8 @@ if __name__ == "__main__":
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
         print(f'| Epoch: {epoch:02} | Val Loss: {valid_loss:.4f} | Val Acc: {valid_acc*100:.3f}%')
         if valid_loss < best_valid_loss:
-            torch.save(model.state_dict(), MODEL_PATH)
-            print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss, MODEL_PATH))
+            torch.save(model.state_dict(), MODEL_WEIGHTS)
+            print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss, MODEL_WEIGHTS))
             best_valid_loss = valid_loss
             epochs_without_improvement = 0
 
@@ -145,7 +155,6 @@ if __name__ == "__main__":
 
         epochs_without_improvement += 1
 
-
-    model.load_state_dict(torch.load(MODEL_PATH))
+    model.load_state_dict(torch.load(MODEL_WEIGHTS))
     test_loss, test_acc = evaluate(model, test_iterator, criterion)
     print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')

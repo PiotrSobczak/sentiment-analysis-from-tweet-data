@@ -149,22 +149,9 @@ class BatchLoader:
     def _create_batch(self, raw_batch):
         batch = np.zeros((self._batch_size, self._sequence_len, self._embedding_size))
         for sentence_id, sentence in enumerate(raw_batch["inputs"]):
-            words = sentence.split(" ")
-            sentence_embedded = np.zeros((self._sequence_len, self._embedding_size))
-            for word_id in range(self._sequence_len):
-                if word_id < len(words):
-                    sentence_embedded[word_id] = Word2VecMini.get_embedding(words[word_id])
-                # else:
-                #     sentence_embedded[word_id] = np.zeros((1, self._embedding_size))
-            batch[sentence_id] = sentence_embedded
+            batch[sentence_id] = Word2VecMini.get_sentence_embedding(sentence, self._sequence_len)
 
         return batch.swapaxes(0, 1), torch.tensor(np.array(raw_batch["labels"])).float()
 
-
-if __name__ == "__main__":
-    train, val, test = DataLoader.get_data_in_batches()
-    train_loader = BatchLoader(train)
-    batch = train_loader.next()
-    import pdb;pdb.set_trace()
 
 

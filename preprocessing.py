@@ -7,7 +7,8 @@ class Preprocessor:
     @staticmethod
     def preprocess_one(text):
         # text = text.replace("\'", "").replace("\"", "")
-        text = text[1:-1]
+        if text.startswith("\'") and text.endswith("\'"):
+            text = text[1:-1]
         text = filter(text, Filters.is_invalid)
         text = text.lower()
         text = text.replace(".", " ").replace(",", " ")

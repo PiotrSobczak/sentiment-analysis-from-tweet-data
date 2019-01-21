@@ -6,6 +6,7 @@ class Word2VecMini:
     is_init=False
     word_to_index = None
     embedding_array = None
+    EMBEDDING_SIZE = 400
 
     @classmethod
     def init(cls):
@@ -23,7 +24,16 @@ class Word2VecMini:
             if word in cls.word_to_index:
                 return cls.embedding_array[cls.word_to_index[word]]
             else:
-                return np.zeros((1, 400))
+                return np.zeros((1, cls.EMBEDDING_SIZE))
         else:
             cls.init()
             return cls.get_embedding(word)
+
+    @classmethod
+    def get_sentence_embedding(cls, sentence, sequence_len):
+        words = sentence.split(" ")
+        sentence_embedded = np.zeros((sequence_len, cls.EMBEDDING_SIZE))
+        for word_id in range(sequence_len):
+            if word_id < len(words):
+                sentence_embedded[word_id] = cls.get_embedding(words[word_id])
+        return sentence_embedded
