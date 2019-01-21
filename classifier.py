@@ -91,8 +91,7 @@ def evaluate(model, iterator, criterion):
 
 
 if __name__ == "__main__":
-    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = "cuda"
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     if device == "cuda":
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
     else:
@@ -112,17 +111,25 @@ if __name__ == "__main__":
     criterion = criterion.to(device)
 
     N_EPOCHS = 1000
-
-    train_raw, val_raw, test = DataLoader.get_data_in_batches()
+    MODEL_PATH = "data/model.torch"
+    best_valid_loss = 999
+    
+    train_raw, val_raw, test_raw = DataLoader.get_data_in_batches()
     train_iterator = BatchLoader(train_raw)
     validation_iterator = BatchLoader(val_raw)
+    test_iterator = BatchLoader(test_raw)
 
     for epoch in range(N_EPOCHS):
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
         print(f'| Epoch: {epoch+1:02} | Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}%')
+        if valid_loss < best_valid_loss:
+            torch.save(model.state_dict(), MODEL_PATH)
+            print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss, MODEL_PATH))
+            best_valid_loss = valid_loss
 
         train_loss, train_acc = train(model, train_iterator, optimizer, criterion)
         print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%')
 
-        # test_loss, test_acc = evaluate(model, test_iterator, criterion)
-        # print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')
+    model.load_state_dict(torch.load(MODEL_PATH))
+    test_loss, test_acc = evaluate(model, test_iterator, criterion)
+    print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')
