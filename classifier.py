@@ -112,23 +112,30 @@ if __name__ == "__main__":
 
     N_EPOCHS = 1000
     MODEL_PATH = "data/model.torch"
+    PATIENCE = 5
+
     best_valid_loss = 999
-    
+    epochs_without_improvement = 0
+
     train_raw, val_raw, test_raw = DataLoader.get_data_in_batches()
     train_iterator = BatchLoader(train_raw)
     validation_iterator = BatchLoader(val_raw)
     test_iterator = BatchLoader(test_raw)
 
     for epoch in range(N_EPOCHS):
+        if epochs_without_improvement > PATIENCE:
+            break
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
         print(f'| Epoch: {epoch+1:02} | Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}%')
         if valid_loss < best_valid_loss:
             torch.save(model.state_dict(), MODEL_PATH)
             print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss, MODEL_PATH))
             best_valid_loss = valid_loss
+            epochs_without_improvement = 0
 
         train_loss, train_acc = train(model, train_iterator, optimizer, criterion)
         print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%')
+        epochs_without_improvement += 1
 
     model.load_state_dict(torch.load(MODEL_PATH))
     test_loss, test_acc = evaluate(model, test_iterator, criterion)

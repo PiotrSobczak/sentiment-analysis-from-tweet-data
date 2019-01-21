@@ -9,6 +9,7 @@ from utils import timeit
 import numpy as np
 import pickle
 
+
 class Vocab(object):
     """A single vocabulary item, used internally for constructing binary trees (incl. both word leaves and inner nodes)."""
     def __init__(self, **kwargs):
@@ -274,45 +275,3 @@ class Word2Vec:
             return self.embedding_array[self.word_to_index[word]]
         else:
             return np.zeros((1, 400))
-
-
-class Word2VecMini:
-    is_init=False
-    word_to_index = None
-    embedding_array = None
-
-    @classmethod
-    def init(cls):
-        if not cls.is_init:
-            cls.embedding_array = np.load("data/embeddings_array.numpy")
-            cls.word_to_index = pickle.load(open("data/word_to_index.pickle", "rb"))
-            cls.is_init = True
-            print("Initialized Word2VecMini")
-        else:
-            print("Word2VecMini already initialized")
-
-    @classmethod
-    def get_embedding(cls, word):
-        if cls.is_init:
-            if word in cls.word_to_index:
-                return cls.embedding_array[cls.word_to_index[word]]
-            else:
-                return np.zeros((1, 400))
-        else:
-            cls.init()
-            return cls.get_embedding(word)
-
-if __name__ == "__main__":
-    # model_path = "./data/word2vec_twitter_model.bin"
-    # print("Loading the model, this can take some time...")
-    # model = Word2Vec.load_word2vec_format(model_path, binary=True)
-    # vocab_size = len(model.vocab)
-    # print("The vocabulary size is: "+str(vocab_size))
-    # import pdb;pdb.set_trace()
-    # similar = model.most_similar('cat')
-    # words = list((w[0] for w in similar))
-    # print(words)
-    print(Word2VecMini.get_embedding("</s>"))
-    Word2VecMini.init()
-    print(Word2VecMini.get_embedding("cat")[:5])
-    print(Word2VecMini.get_embedding("glass")[:5])

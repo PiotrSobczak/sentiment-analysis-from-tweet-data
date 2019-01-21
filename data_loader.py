@@ -1,10 +1,8 @@
 import csv
 from os.path import isfile
 from preprocessing import Preprocessor
-from utils import timeit
-from word2vecReader import Word2Vec, Word2VecMini
+from word2vec_utils import Word2VecMini
 import numpy as np
-import pickle
 import torch
 
 EMOTION_CLASSES = ["happiness", "anger", "sadness", "neutral"]
