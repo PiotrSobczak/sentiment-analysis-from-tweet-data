@@ -27,11 +27,8 @@ class RNN(nn.Module):
 
         # concat the final forward (hidden[-2,:,:]) and backward (hidden[-1,:,:]) hidden layers
         # and apply dropout
-
-        #hidden = torch.cat((hidden[-2, :, :], hidden[-1, :, :]), dim=1)
-        # hidden = [batch size, hid dim * num directions]
         hidden = hidden[-1, :, :]
-        hidden = self.dropout(hidden)
+        #hidden = self.dropout(hidden)
         hidden = hidden.squeeze(0).float()
         return self.fc(hidden)
 
@@ -63,7 +60,12 @@ def train(model, iterator, optimizer, criterion):
         loss = criterion(predictions, labels)
         acc = binary_accuracy(predictions, labels)
 
-        loss.backward()
+        reg_loss = 0
+        for param in model.parameters():
+            reg_loss += param.norm(2)
+
+        total_loss = loss + 0.001*reg_loss
+        total_loss.backward()
 
         optimizer.step()
 
