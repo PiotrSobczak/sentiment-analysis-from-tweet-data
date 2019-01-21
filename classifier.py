@@ -45,6 +45,7 @@ def binary_accuracy(preds, y):
     acc = correct.sum()/len(correct)
     return acc
 
+
 @timeit
 def train(model, iterator, optimizer, criterion):
     epoch_loss = 0
@@ -90,8 +91,6 @@ def evaluate(model, iterator, criterion):
 
 
 if __name__ == "__main__":
-
-
     #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     device = "cuda"
     if device == "cuda":
@@ -106,24 +105,24 @@ if __name__ == "__main__":
     model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM)
     model.float()
 
-    optimizer = optim.Adam(model.parameters(), lr=0.00001)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     criterion = nn.BCEWithLogitsLoss()
     model = model.to(device)
     criterion = criterion.to(device)
 
-    N_EPOCHS = 5000
+    N_EPOCHS = 1000
 
     train_raw, val_raw, test = DataLoader.get_data_in_batches()
-    train_loader = BatchLoader(train_raw)
+    train_iterator = BatchLoader(train_raw)
     validation_iterator = BatchLoader(val_raw)
 
     for epoch in range(N_EPOCHS):
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
-        train_loss, train_acc = train(model, train_loader, optimizer, criterion)
+        print(f'| Epoch: {epoch+1:02} | Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}%')
 
-        print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}% | Val. Loss: {valid_loss:.3f} | Val. Acc: {valid_acc*100:.2f}% |')
+        train_loss, train_acc = train(model, train_iterator, optimizer, criterion)
+        print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%')
 
         # test_loss, test_acc = evaluate(model, test_iterator, criterion)
-        #
         # print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')

@@ -115,7 +115,7 @@ class DataLoader:
             batch_labels = [1] * BATCH_SIZE_HALF + [0] * BATCH_SIZE_HALF
             batch_list.append({"inputs": batch_input, "labels": batch_labels})
 
-        TRAIN_BATCHES = 190
+        TRAIN_BATCHES = 19000
         VAL_BATCHES = 3000
         TEST_BATCHES = 3000
 
@@ -160,7 +160,7 @@ class BatchLoader:
                 #     sentence_embedded[word_id] = np.zeros((1, self._embedding_size))
             batch[sentence_id] = sentence_embedded
 
-        return batch.swapaxes(0,1), torch.tensor(np.array(raw_batch["labels"])).float()
+        return batch.swapaxes(0, 1), torch.tensor(np.array(raw_batch["labels"])).float()
 
 
 if __name__ == "__main__":
