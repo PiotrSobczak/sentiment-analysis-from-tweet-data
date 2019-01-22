@@ -1,10 +1,10 @@
 from preprocessing import Preprocessor
 from word2vec_wrapper import Word2VecWrapper
 from train import RNN
-import torch
+from torch.nn.functional import tanh
 import numpy as np
 import json
-
+import torch
 
 def load_model(model_path):
     config = json.load(open("{}.config".format(model_path), "r"))
@@ -31,9 +31,25 @@ def demo(text):
 
     with torch.no_grad():
         sentiment = model(text_embedded)
-        print("Sentence {} has {} sentiment".format(text, float(sentiment)))
+        print("[{}] {} sentiment".format(text, float(tanh(sentiment))))
 
 
 if __name__=="__main__":
     demo("yes")
+    demo("yes!!!")
+
+    demo("no")
+    demo("no!!!")
+
+    demo("i like cars deadly")
+    demo("this car is like deadly")
+
+    demo("feeling well")
+    demo("not feeling well")
+    demo("not, i'm feeling well")
+
+    demo("he is cool")
+    demo("he thinks he is cool")
+    demo("he thinks he is cool, but he is not")
+    demo("he thinks he is cool, but that's a lie")
     import pdb;pdb.set_trace()

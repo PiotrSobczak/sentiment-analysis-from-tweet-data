@@ -10,8 +10,6 @@ class BatchIterator:
         self._batch_size = batch_size
         self._embedding_size = embedding_size
         self._sequence_len = sequence_len
-        self._next_batch_index = 1
-        self._next_batch, self._next_labels = self._create_batch(raw_batch_list[0])
 
     def __len__(self):
         return self._size

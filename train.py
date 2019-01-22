@@ -29,7 +29,7 @@ class RNN(nn.Module):
             embedding_dim = int(config["embedding_dim"])
             hidden_dim = int(config["hidden_dim"])
             dropout = float(config["dropout"])
-            print("Loaded custom config")
+            #print("Loaded custom config")
         else:
             json.dump({"embedding_dim": embedding_dim, "hidden_dim": hidden_dim, "dropout": dropout}, open(MODEL_CONFIG, "w"))
             print("Saved model config to {}".format(MODEL_CONFIG))
