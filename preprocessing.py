@@ -1,23 +1,20 @@
-from utils import timeit
+from word2vec_wrapper import Word2VecWrapper
 
 
 class Preprocessor:
     sentence_len = []
 
     @staticmethod
-    def preprocess_one(text):
-        # text = text.replace("\'", "").replace("\"", "")
-        if text.startswith("\'") and text.endswith("\'"):
-            text = text[1:-1]
+    def preprocess_one(raw_text):
+        if (raw_text.startswith("\'") and raw_text.endswith("\'")) or (raw_text.startswith("\"") and raw_text.endswith("\"")):
+            raw_text = raw_text[1:-1]
+        text = raw_text.lower()
         text = filter(text, Filters.is_invalid)
-        text = text.lower()
-        text = text.replace(".", " ").replace(",", " ")
+        text = text.replace(".", " . ").replace(",", " , ")
         text = text.replace("!", " ! ").replace("?", " ? ")
         text = text.replace("%", " percent ")
         text = filter(text, Filters._is_empty)
-
-        # sentence_len = len(text.split(" "))
-        # Preprocessor.sentence_len.append(sentence_len)
+        text = filter(text, Filters._not_in_vocab)
 
         return text
 
@@ -59,6 +56,11 @@ class Filters:
     @staticmethod
     def _is_special(word):
         return word == "-" or word == "-" or word == "/" or word == "(" or word == ")"
+
+
+    @staticmethod
+    def _not_in_vocab(word):
+        return not Word2VecWrapper.vocab_contains(word)
 
     @staticmethod
     def is_invalid(word):

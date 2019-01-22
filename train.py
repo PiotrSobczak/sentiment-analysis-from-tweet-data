@@ -1,7 +1,8 @@
 import torch.nn as nn
 import torch
 import torch.optim as optim
-from data_loader import BatchLoader, DataLoader
+from batch_iterator import BatchIterator
+from data_loader import DataLoader
 import torch.tensor
 from utils import timeit
 import json
@@ -38,17 +39,14 @@ class RNN(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-
         # x = [sent len, batch size, emb dim]
         x = torch.cuda.FloatTensor(x)
         output, (hidden, cell) = self.lstm(x)
 
         # output = [sent len, batch size, hid dim * num directions]
-        # hidden = [num layers * num directions, batch size, hid dim]
-        # cell = [num layers * num directions, batch size, hid dim]
+        # hidden&cell = [num layers * num directions, batch size, hid dim]
 
-        # concat the final forward (hidden[-2,:,:]) and backward (hidden[-1,:,:]) hidden layers
-        # and apply dropout
+        # concat the final forward (hidden[-2,:,:]) and backward (hidden[-1,:,:]) hidden layers and apply dropout
         hidden = hidden[-1, :, :]
         #hidden = self.dropout(hidden)
         hidden = hidden.squeeze(0).float()
@@ -59,10 +57,8 @@ def binary_accuracy(preds, y):
     """
     Returns accuracy per batch, i.e. if you get 8/10 right, this returns 0.8, NOT 8
     """
-
-    #round predictions to the closest integer
     rounded_preds = torch.round(torch.sigmoid(preds))
-    correct = (rounded_preds == y).float() #convert into float for division
+    correct = (rounded_preds == y).float()
     acc = correct.sum()/len(correct)
     return acc
 
@@ -130,7 +126,6 @@ if __name__ == "__main__":
     model.float()
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-
     criterion = nn.BCEWithLogitsLoss()
     model = model.to(device)
     criterion = criterion.to(device)
@@ -138,10 +133,11 @@ if __name__ == "__main__":
     best_valid_loss = 999
     epochs_without_improvement = 0
 
+    """Creating data generators"""
     train_raw, val_raw, test_raw = DataLoader.get_data_in_batches()
-    train_iterator = BatchLoader(train_raw)
-    validation_iterator = BatchLoader(val_raw)
-    test_iterator = BatchLoader(test_raw)
+    train_iterator = BatchIterator(train_raw)
+    validation_iterator = BatchIterator(val_raw)
+    test_iterator = BatchIterator(test_raw)
 
     for epoch in range(N_EPOCHS):
         if epochs_without_improvement == PATIENCE:

@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 
 
-class Word2VecMini:
+class Word2VecWrapper:
     is_init=False
     word_to_index = None
     embedding_array = None
@@ -14,9 +14,15 @@ class Word2VecMini:
             cls.embedding_array = np.load("data/embeddings_array.numpy")
             cls.word_to_index = pickle.load(open("data/word_to_index.pickle", "rb"))
             cls.is_init = True
-            print("Initialized Word2VecMini")
+            print("Initialized Word2VecWrapper")
         else:
-            print("Word2VecMini already initialized")
+            print("Word2VecWrapper already initialized")
+
+    @classmethod
+    def vocab_contains(cls, word):
+        if not cls.is_init:
+            cls.init()
+        return word in cls.word_to_index
 
     @classmethod
     def get_embedding(cls, word):

@@ -1,6 +1,6 @@
 from preprocessing import Preprocessor
-from word2vec_utils import Word2VecMini
-from classifier import RNN
+from word2vec_wrapper import Word2VecWrapper
+from train import RNN
 import torch
 import numpy as np
 import json
@@ -25,9 +25,9 @@ def load_model(model_path):
 
 def demo(text):
     text = Preprocessor.preprocess_one(text)
-    text_embedded = Word2VecMini.get_sentence_embedding(text, 30)
+    text_embedded = Word2VecWrapper.get_sentence_embedding(text, 30)
     text_embedded = np.expand_dims(text_embedded, 0).swapaxes(0, 1)
-    model = load_model("CONFIGURE THIS PATH")
+    model = load_model("models/2019-01-21_17:32:30_84acc/model")
 
     with torch.no_grad():
         sentiment = model(text_embedded)
