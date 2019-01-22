@@ -10,15 +10,17 @@ import os
 from time import gmtime, strftime
 
 EMBEDDING_DIM = 400
-HIDDEN_DIM = 64
+HIDDEN_DIM = 800
 OUTPUT_DIM = 1
-DROPOUT = 0.5
+DROPOUT = 0.0
 N_EPOCHS = 100
 PATIENCE = 3
 MODEL_PATH = "models"
 MODEL_RUN_PATH = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
 MODEL_CONFIG = "{}/model.config".format(MODEL_RUN_PATH)
 MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
+REG_RATIO=0.00001
+NUM_LAYERS=1
 
 
 class RNN(nn.Module):
@@ -31,10 +33,12 @@ class RNN(nn.Module):
             dropout = float(config["dropout"])
             #print("Loaded custom config")
         else:
-            json.dump({"embedding_dim": embedding_dim, "hidden_dim": hidden_dim, "dropout": dropout}, open(MODEL_CONFIG, "w"))
+            json.dump({"embedding_dim": embedding_dim, "hidden_dim": hidden_dim, "dropout": dropout, "reg_ratio": REG_RATIO, "n_layers": NUM_LAYERS}, 
+open(MODEL_CONFIG, 
+"w"))
             print("Saved model config to {}".format(MODEL_CONFIG))
 
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=2)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=NUM_LAYERS)
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.dropout = nn.Dropout(dropout)
 
@@ -82,7 +86,7 @@ def train(model, iterator, optimizer, criterion):
         for param in model.parameters():
             reg_loss += param.norm(2)
 
-        total_loss = loss + 0.00001*reg_loss
+        total_loss = loss + REG_RATIO*reg_loss
         total_loss.backward()
 
         optimizer.step()
