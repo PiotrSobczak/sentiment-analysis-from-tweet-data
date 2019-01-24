@@ -88,15 +88,13 @@ class DataLoader:
         return positives, negatives
 
     @staticmethod
-    def get_data_in_batches():
+    def get_data_in_batches(verbose=False):
         positives, negatives = DataLoader.load_data_from_txt()
 
         """Balancing positive& negative sampling after ignoring some tweets based on sequence length"""
         balanced_size = len(positives) if len(negatives) > len(positives) else len(negatives)
         positives = positives[:balanced_size]
         negatives = negatives[:balanced_size]
-
-        print("Loaded data.{} positives and {} negatives".format(len(positives), len(negatives)))
 
         batch_list = []
         BATCH_SIZE = 64
@@ -117,11 +115,13 @@ class DataLoader:
         train = batch_list[:TRAIN_BATCHES]
         val = batch_list[TRAIN_BATCHES: TRAIN_BATCHES + VAL_BATCHES]
         test = batch_list[TRAIN_BATCHES + VAL_BATCHES:]
-
-        print("Loaded data. Number of batches: {}".format(NUM_BATCHES))
-        print("Train set size: {}.".format(len(train)))
-        print("Val set size: {}.".format(len(val)))
-        print("Test set size: {}.".format(len(test)))
+	
+        if verbose:
+            print("Loaded data.{} positives and {} negatives".format(len(positives), len(negatives)))
+            print("Loaded data. Number of batches: {}".format(NUM_BATCHES))
+            print("Train set size: {}.".format(len(train)))
+            print("Val set size: {}.".format(len(val)))
+            print("Test set size: {}.".format(len(test)))
 
         return train, val, test
 
