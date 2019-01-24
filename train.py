@@ -17,7 +17,8 @@ N_EPOCHS = 100
 PATIENCE = 3
 REG_RATIO=0.00001
 NUM_LAYERS=1
-VERBOSE=False
+BIDIRECTIONAL = True
+VERBOSE=True
 MODEL_PATH = "models"
 MODEL_RUN_PATH = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
 MODEL_CONFIG = "{}/model.config".format(MODEL_RUN_PATH)
@@ -26,6 +27,7 @@ MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
 
 class RNN(nn.Module):
     def __init__(self, embedding_dim=EMBEDDING_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM, dropout=DROPOUT, config=None):
+        print("---------------- NUM_LAYERS={}, HIDDEN_DIM={}, DROPOUT={}, REG_RATIO={}, BIDIR={}----------------".format(NUM_LAYERS, hidden_dim, dropout, REG_RATIO, BIDIRECTIONAL))
         super().__init__()
 
         if config is not None:
@@ -39,20 +41,22 @@ open(MODEL_CONFIG,
 "w"))
             #print("Saved model config to {}".format(MODEL_CONFIG))
 
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=NUM_LAYERS)
-        self.fc = nn.Linear(hidden_dim, output_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=NUM_LAYERS, bidirectional=BIDIRECTIONAL, dropout=dropout)
+        self.fc = nn.Linear(hidden_dim*2, output_dim)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         # x = [sent len, batch size, emb dim]
         x = torch.cuda.FloatTensor(x)
+        x=self.dropout(x)
         output, (hidden, cell) = self.lstm(x)
-
+	
         # output = [sent len, batch size, hid dim * num directions]
         # hidden&cell = [num layers * num directions, batch size, hid dim]
 
         # concat the final forward (hidden[-2,:,:]) and backward (hidden[-1,:,:]) hidden layers and apply dropout
-        hidden = hidden[-1, :, :]
+        #hidden = hidden[-1, :, :]
+        hidden = self.dropout(torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1))
         #hidden = self.dropout(hidden)
         hidden = hidden.squeeze(0).float()
         return self.fc(hidden)
@@ -127,7 +131,7 @@ def run_training():
     else:
         torch.set_default_tensor_type('torch.FloatTensor')
 
-    model = RNN(EMBEDDING_DIM, HIDDEN_DIM, OUTPUT_DIM, DROPOUT)
+    model = RNN()
     model.float()
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -152,7 +156,7 @@ def run_training():
         log(f'| Epoch: {epoch:02} | Val Loss: {valid_loss:.4f} | Val Acc: {valid_acc*100:.3f}%')
         if valid_loss < best_valid_loss:
             torch.save(model.state_dict(), MODEL_WEIGHTS)
-            log("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss,
+            print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss,
                                                                                 MODEL_WEIGHTS))
             best_valid_loss = valid_loss
             epochs_without_improvement = 0
@@ -161,7 +165,9 @@ def run_training():
         log(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
 
         epochs_without_improvement += 1
-
+    
+        if not epoch % 5: 
+            print(f'| Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}% | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
     model.load_state_dict(torch.load(MODEL_WEIGHTS))
     test_loss, test_acc = evaluate(model, test_iterator, criterion)
     print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')
@@ -175,13 +181,13 @@ def log(log_message):
 if __name__ == "__main__":
     import numpy as np
     for num_iteration in range(50):
-        NUM_LAYERS = np.random.randint(1, 8)
-        HIDDEN_DIM = np.random.randint(10, 1200)
-        DROPOUT = np.random.rand()
-        REG_RATIO = np.random.rand()*0.001
+        global
+        NUM_LAYERS = np.random.randint(1, 4)
+        HIDDEN_DIM = np.random.randint(64, 1200)
+        DROPOUT = 0.1+np.random.rand()*0.85
+        REG_RATIO = np.random.rand()*0.00001
         MODEL_RUN_PATH = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
         MODEL_CONFIG = "{}/model.config".format(MODEL_RUN_PATH)
         MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
-        print("---------------- NUM_LAYERS={}, HIDDEN_DIM={}, DROPOUT={}, REG_RATIO={}----------------".format(NUM_LAYERS, HIDDEN_DIM, DROPOUT, REG_RATIO))
         run_training()
         print("Model saved to {}".format(MODEL_RUN_PATH))
