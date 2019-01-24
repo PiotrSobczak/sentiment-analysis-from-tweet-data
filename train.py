@@ -26,8 +26,8 @@ MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
 
 
 class RNN(nn.Module):
-    def __init__(self, embedding_dim=EMBEDDING_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM, dropout=DROPOUT, config=None):
-        print("---------------- NUM_LAYERS={}, HIDDEN_DIM={}, DROPOUT={}, REG_RATIO={}, BIDIR={}----------------".format(NUM_LAYERS, hidden_dim, dropout, REG_RATIO, BIDIRECTIONAL))
+    def __init__(self, embedding_dim=EMBEDDING_DIM, hidden_dim=HIDDEN_DIM, dropout=DROPOUT, num_layers=NUM_LAYERS, config=None, model_config=MODEL_CONFIG, reg_ratio=REG_RATIO):
+        print("---------------- NUM_LAYERS={}, HIDDEN_DIM={}, DROPOUT={}, REG_RATIO={}, BIDIR={}----------------".format(num_layers, hidden_dim, dropout, reg_ratio, BIDIRECTIONAL))
         super().__init__()
 
         if config is not None:
@@ -37,12 +37,12 @@ class RNN(nn.Module):
             #print("Loaded custom config")
         else:
             json.dump({"embedding_dim": embedding_dim, "hidden_dim": hidden_dim, "dropout": dropout, "reg_ratio": REG_RATIO, "n_layers": NUM_LAYERS}, 
-open(MODEL_CONFIG, 
+open(model_config,
 "w"))
-            #print("Saved model config to {}".format(MODEL_CONFIG))
+            #print("Saved model config to {}".format(model_config))
 
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=NUM_LAYERS, bidirectional=BIDIRECTIONAL, dropout=dropout)
-        self.fc = nn.Linear(hidden_dim*2, output_dim)
+        self.fc = nn.Linear(hidden_dim*2, 1)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -72,7 +72,7 @@ def binary_accuracy(preds, y):
     return acc
 
 
-def train(model, iterator, optimizer, criterion):
+def train(model, iterator, optimizer, criterion, reg_ratio=REG_RATIO):
     epoch_loss = 0
     epoch_acc = 0
 
@@ -122,7 +122,11 @@ def evaluate(model, iterator, criterion):
 
 
 @timeit
-def run_training():
+def run_training(**kwargs):
+#def run_training(embedding_dim=EMBEDDING_DIM, hidden_dim=HIDDEN_DIM, dropout=DROPOUT, num_layers=NUM_LAYERS, reg_ratio=REG_RATIO, config=None, model_run_path=MODEL_RUN_PATH):
+    model_run_path=MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
+    model_config = "{}/model.config".format(kwargs.get("model_run_path", MODEL_RUN_PATH))
+    model_weights = "{}/model.torch".format(kwargs.get("model_run_path", MODEL_RUN_PATH))
     os.makedirs(MODEL_RUN_PATH, exist_ok=True)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -131,7 +135,7 @@ def run_training():
     else:
         torch.set_default_tensor_type('torch.FloatTensor')
 
-    model = RNN()
+    model = RNN(**kwargs)
     model.float()
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -155,20 +159,20 @@ def run_training():
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
         log(f'| Epoch: {epoch:02} | Val Loss: {valid_loss:.4f} | Val Acc: {valid_acc*100:.3f}%')
         if valid_loss < best_valid_loss:
-            torch.save(model.state_dict(), MODEL_WEIGHTS)
+            torch.save(model.state_dict(), model_weights)
             print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss,
-                                                                                MODEL_WEIGHTS))
+                                                                                model_weights))
             best_valid_loss = valid_loss
             epochs_without_improvement = 0
 
-        train_loss, train_acc = train(model, train_iterator, optimizer, criterion)
+        train_loss, train_acc = train(model, train_iterator, optimizer, criterion, kwargs["reg_ratio"])
         log(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
 
         epochs_without_improvement += 1
     
         if not epoch % 5: 
             print(f'| Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}% | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
-    model.load_state_dict(torch.load(MODEL_WEIGHTS))
+    model.load_state_dict(torch.load(model_weights))
     test_loss, test_acc = evaluate(model, test_iterator, criterion)
     print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')
 
@@ -181,13 +185,10 @@ def log(log_message):
 if __name__ == "__main__":
     import numpy as np
     for num_iteration in range(50):
-        global
-        NUM_LAYERS = np.random.randint(1, 4)
-        HIDDEN_DIM = np.random.randint(64, 1200)
-        DROPOUT = 0.1+np.random.rand()*0.85
-        REG_RATIO = np.random.rand()*0.00001
-        MODEL_RUN_PATH = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
-        MODEL_CONFIG = "{}/model.config".format(MODEL_RUN_PATH)
-        MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
-        run_training()
-        print("Model saved to {}".format(MODEL_RUN_PATH))
+        params = {}
+        params["num_layers"] = np.random.randint(1, 4)
+        params["hidden_dim"] = np.random.randint(64, 1200)
+        params["dropout"] = 0.1+np.random.rand()*0.85
+        params["reg_ratio"] = np.random.rand()*0.00001
+        #params["model_run_path"] = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
+        run_training(**params)
