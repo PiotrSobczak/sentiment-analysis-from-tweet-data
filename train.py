@@ -15,12 +15,13 @@ OUTPUT_DIM = 1
 DROPOUT = 0.0
 N_EPOCHS = 100
 PATIENCE = 3
+REG_RATIO=0.00001
+NUM_LAYERS=1
+VERBOSE=False
 MODEL_PATH = "models"
 MODEL_RUN_PATH = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
 MODEL_CONFIG = "{}/model.config".format(MODEL_RUN_PATH)
 MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
-REG_RATIO=0.00001
-NUM_LAYERS=1
 
 
 class RNN(nn.Module):
@@ -36,7 +37,7 @@ class RNN(nn.Module):
             json.dump({"embedding_dim": embedding_dim, "hidden_dim": hidden_dim, "dropout": dropout, "reg_ratio": REG_RATIO, "n_layers": NUM_LAYERS}, 
 open(MODEL_CONFIG, 
 "w"))
-            print("Saved model config to {}".format(MODEL_CONFIG))
+            #print("Saved model config to {}".format(MODEL_CONFIG))
 
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=NUM_LAYERS)
         self.fc = nn.Linear(hidden_dim, output_dim)
@@ -67,7 +68,6 @@ def binary_accuracy(preds, y):
     return acc
 
 
-@timeit
 def train(model, iterator, optimizer, criterion):
     epoch_loss = 0
     epoch_acc = 0
@@ -96,7 +96,7 @@ def train(model, iterator, optimizer, criterion):
 
     return epoch_loss / len(iterator), epoch_acc / len(iterator)
 
-@timeit
+
 def evaluate(model, iterator, criterion):
     epoch_loss = 0
     epoch_acc = 0
@@ -117,7 +117,8 @@ def evaluate(model, iterator, criterion):
     return epoch_loss / len(iterator), epoch_acc / len(iterator)
 
 
-if __name__ == "__main__":
+@timeit
+def run_training():
     os.makedirs(MODEL_RUN_PATH, exist_ok=True)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -148,18 +149,39 @@ if __name__ == "__main__":
             break
 
         valid_loss, valid_acc = evaluate(model, validation_iterator, criterion)
-        print(f'| Epoch: {epoch:02} | Val Loss: {valid_loss:.4f} | Val Acc: {valid_acc*100:.3f}%')
+        log(f'| Epoch: {epoch:02} | Val Loss: {valid_loss:.4f} | Val Acc: {valid_acc*100:.3f}%')
         if valid_loss < best_valid_loss:
             torch.save(model.state_dict(), MODEL_WEIGHTS)
-            print("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss, MODEL_WEIGHTS))
+            log("Val loss improved from {} to {}. Saving model to {}.".format(best_valid_loss, valid_loss,
+                                                                                MODEL_WEIGHTS))
             best_valid_loss = valid_loss
             epochs_without_improvement = 0
 
         train_loss, train_acc = train(model, train_iterator, optimizer, criterion)
-        print(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
+        log(f'| Epoch: {epoch+1:02} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
 
         epochs_without_improvement += 1
 
     model.load_state_dict(torch.load(MODEL_WEIGHTS))
     test_loss, test_acc = evaluate(model, test_iterator, criterion)
     print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')
+
+
+def log(log_message):
+    if VERBOSE:
+        print(log_message)
+
+
+if __name__ == "__main__":
+    import numpy as np
+    for num_iteration in range(50):
+        NUM_LAYERS = np.random.randint(1, 8)
+        HIDDEN_DIM = np.random.randint(10, 1200)
+        DROPOUT = np.random.rand()
+        REG_RATIO = np.random.rand()*0.001
+        MODEL_RUN_PATH = MODEL_PATH + "/" + strftime("%Y-%m-%d_%H:%M:%S", gmtime())
+        MODEL_CONFIG = "{}/model.config".format(MODEL_RUN_PATH)
+        MODEL_WEIGHTS = "{}/model.torch".format(MODEL_RUN_PATH)
+        print("---------------- NUM_LAYERS={}, HIDDEN_DIM={}, DROPOUT={}, REG_RATIO={}----------------".format(NUM_LAYERS, HIDDEN_DIM, DROPOUT, REG_RATIO))
+        run_training()
+        print("Model saved to {}".format(MODEL_RUN_PATH))

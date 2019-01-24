@@ -57,9 +57,10 @@ class DataLoader:
         return positive, negative
 
     @staticmethod
-    def load_data_from_txt():
+    def load_data_from_txt(verbose=False):
         if isfile("data/positives.txt") and isfile("data/negatives.txt"):
-            print("Loading cached positive & negative data")
+            if verbose:
+                print("Loading cached positive & negative data")
             """Dumping preprocessed results"""
             with open("data/negatives.txt", 'r', encoding='latin-1') as negatives_file:
                 negatives = negatives_file.read().split("\n")
@@ -115,13 +116,10 @@ class DataLoader:
         train = batch_list[:TRAIN_BATCHES]
         val = batch_list[TRAIN_BATCHES: TRAIN_BATCHES + VAL_BATCHES]
         test = batch_list[TRAIN_BATCHES + VAL_BATCHES:]
-	
+
         if verbose:
             print("Loaded data.{} positives and {} negatives".format(len(positives), len(negatives)))
-            print("Loaded data. Number of batches: {}".format(NUM_BATCHES))
-            print("Train set size: {}.".format(len(train)))
-            print("Val set size: {}.".format(len(val)))
-            print("Test set size: {}.".format(len(test)))
+        print("Loaded batches.Train batches: {}. Val batches: {}. Test batches: {}".format(len(train), len(val), len(test)))
 
         return train, val, test
 
