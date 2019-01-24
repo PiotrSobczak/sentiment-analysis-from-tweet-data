@@ -6,6 +6,7 @@ import numpy as np
 import json
 import torch
 
+
 def load_model(model_path):
     config = json.load(open("{}.config".format(model_path), "r"))
 
@@ -27,7 +28,7 @@ def demo(text):
     text = Preprocessor.preprocess_one(text)
     text_embedded = Word2VecWrapper.get_sentence_embedding(text, 30)
     text_embedded = np.expand_dims(text_embedded, 0).swapaxes(0, 1)
-    model = load_model("models/2019-01-21_17:32:30_84acc/model")
+    model = load_model("models/2019-01-21_23:37:33/model")
 
     with torch.no_grad():
         sentiment = model(text_embedded)
@@ -52,4 +53,12 @@ if __name__=="__main__":
     demo("he thinks he is cool")
     demo("he thinks he is cool, but he is not")
     demo("he thinks he is cool, but that's a lie")
+
+    demo("A puppy that was born recently was put to sleep")
+    demo("A puppy was put to sleep")
+    demo("A puppy that was born recently was euthanized")
+    demo("A puppy that was born happy recently was euthanized")
+    demo("put to sleep")
+    demo("i put my puppy to sleep")
+    demo("i put my daughter to sleep")
     import pdb;pdb.set_trace()
