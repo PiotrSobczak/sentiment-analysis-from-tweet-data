@@ -42,7 +42,8 @@ open(model_config,
             #print("Saved model config to {}".format(model_config))
 
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=NUM_LAYERS, bidirectional=BIDIRECTIONAL, dropout=dropout)
-        self.fc = nn.Linear(hidden_dim*2, 1)
+        fc_size = hidden_dim*2 if BIDIRECTIONAL else hidden_dim
+        self.fc = nn.Linear(fc_size, 1)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -55,9 +56,10 @@ open(model_config,
         # hidden&cell = [num layers * num directions, batch size, hid dim]
 
         # concat the final forward (hidden[-2,:,:]) and backward (hidden[-1,:,:]) hidden layers and apply dropout
-        #hidden = hidden[-1, :, :]
-        hidden = self.dropout(torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1))
-        #hidden = self.dropout(hidden)
+        if BIDIRECTIONAL:
+            hidden = self.dropout(torch.cat((hidden[-2,:,:], hidden[-1,:,:]), dim=1))
+        else:
+            hidden = self.dropout(hidden[-1, :, :])
         hidden = hidden.squeeze(0).float()
         return self.fc(hidden)
 
