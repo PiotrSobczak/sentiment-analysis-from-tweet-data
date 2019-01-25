@@ -90,7 +90,7 @@ def train(model, iterator, optimizer, criterion, reg_ratio=REG_RATIO):
         for param in model.parameters():
             reg_loss += param.norm(2)
 
-        total_loss = loss + REG_RATIO*reg_loss
+        total_loss = loss + reg_ratio*reg_loss
         total_loss.backward()
 
         optimizer.step()
@@ -137,10 +137,10 @@ def run_training(**kwargs):
 
     model = RNN(**kwargs)
     model.float()
+    model = model.to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.BCEWithLogitsLoss()
-    model = model.to(device)
     criterion = criterion.to(device)
 
     best_valid_loss = 999
@@ -171,7 +171,8 @@ def run_training(**kwargs):
         epochs_without_improvement += 1
     
         if not epoch % 5: 
-            print(f'| Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}% | Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
+            print(f'| Val Loss: {valid_loss:.3f} | Val Acc: {valid_acc*100:.2f}% '
+                  f'| Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.3f}%')
     model.load_state_dict(torch.load(model_weights))
     test_loss, test_acc = evaluate(model, test_iterator, criterion)
     print(f'| Test Loss: {test_loss:.3f} | Test Acc: {test_acc*100:.2f}% |')
