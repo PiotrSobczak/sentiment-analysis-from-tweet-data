@@ -70,7 +70,7 @@ class DataLoader:
         else:
             print("Loading raw sentiment140 tweet data and running preprocessing")
             positives, negatives = DataLoader.load_sentiment_140(
-                "/home/piotrsobczak/magisterka-dane/training.1600000.processed.noemoticon.csv")
+                "data//training.1600000.processed.noemoticon.csv")
 
             """Preprocessing"""
             positives = Preprocessor.preprocess_many(positives)

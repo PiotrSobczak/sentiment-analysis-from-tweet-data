@@ -32,7 +32,9 @@ def demo(text):
 
     with torch.no_grad():
         sentiment = model(text_embedded)
-        print("[{}] {} sentiment".format(text, float(tanh(sentiment))))
+        sentiment = float(tanh(sentiment))
+        emoticon = ":)" if sentiment > 0 else ":("
+        print("[{}] {} sentiment {}".format(text, round(sentiment, 3), emoticon))
 
 
 if __name__=="__main__":

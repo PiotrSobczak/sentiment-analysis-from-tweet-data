@@ -1,8 +1,7 @@
-import logging
-import word2vecReaderUtils as utils
-from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod
+from word2vecReader import word2vecReaderUtils as utils
+from numpy import dot, zeros, dtype, float32 as REAL, \
+    array, argsort, fromstring, sqrt, newaxis,\
+    ndarray, prod
 from six import string_types
 from gensim import matutils
 from utils import timeit
