@@ -20,13 +20,16 @@ The purpose of this project is creating end to end system for emotion recognitio
 
 ## Sentiment Analysis from tweets
 
-**1.Data **
+**1.Data** 
+
+<img src="https://github.com/PiotrSobczak/emotion-recognition-from-speech/blob/master/assets/data.png" width="600"></img>
+
 For the purpose of the project, [sentiment140](http://help.sentiment140.com/for-students) dataset was used due to it’s size and availability.
 The dataset was created by Stanford University during reasearch on sentiment analysis on
 twitter data, more can be found in this paper. The data consists of 1.6 million tweets annotated
 with 2 classes.(positive or negative sentiment). They gathered the data using Tweeter API.
 
-**2.Preprocessing **
+**2.Preprocessing**  
 The next step is data preprocessing. I made the following preprocessing operations:
 - Convert text to lowercase
 - Removing tags (@mike)
@@ -36,10 +39,12 @@ The next step is data preprocessing. I made the following preprocessing operatio
 - Remove words which are not in out Word2Vec(Skip-Gram) vocabulary.
 - Remove tweets which exceed empirically chosen sequence length.
 
-**3.Word Embeddings **  
+**3.Word Embeddings**   
 In order to train a high quality system having limited resources, I’ve chosen to use a pretrained Word2Vec SkipGram model to obtain word representations in for of distributed vectors called embeddings. The Skip-Gram model was trained on 400 millions of tweets, has a vocabulary of over 3 milions words, and embedding dimension of 400. More about the model architecture can be read in this [paper](https://mail.google.com/mail/u/0/#search/drasza/QgrcJHsNnjWZGsJFSqZKklBHfqsJdSmMLnv?projector=1&messagePartId=0.1). Using this model we can obtain very meaningful word representations for our classifier, which allowed me to use a pretty shallow LSTM network and achieve results of 85% accuracy after training for approximately 1 hour. This wouldn’t be possible if I used for example one-hot encoding.
 
 **4.Classifier Architecture**  
+<img src="https://github.com/PiotrSobczak/emotion-recognition-from-speech/blob/master/assets/architecture.png" width="600"></img>
+
 Parameters of classifier:
 - sequence length - chosen based on data as 30. (Only about 1.5 % of tweets had more
 than 30 words but about 20% had more than 20 words)
@@ -67,7 +72,7 @@ set.
 - Bidirectionality = Yes
 Comparable results but were achieved using no-bidirectional, but with two-layer lstm.
 
-**6.Sentiment Classifier Demo**  
+**6.Sentiment Classifier Demo**   
 [yes] 0.466 sentiment :)  
 [yes ! ! !] 0.989 sentiment :)  
 [no] -0.987 sentiment :(  
