@@ -1,5 +1,5 @@
 ## What is the purpose of this project?
-The purpose of this project is creating end to end system for emotion recognition from speech. The system will have multi-modal architecture consisting of acoustic and linguistic paths.
+Opinion mining using Deep Learning on sentiment140 dataset.
 
 ## Hardware
 The training was conducted using GeForce GTX 1060 graphic card
