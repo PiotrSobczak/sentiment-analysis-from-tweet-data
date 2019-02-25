@@ -1,5 +1,5 @@
 ## What is the purpose of this project?
-The purpos of this project is creating system for opinion mining using Deep Learning on sentiment140 dataset.
+The goal of this project is to create system for opinion mining using Deep Learning on sentiment140 dataset.
 
 ## Hardware
 The training was conducted using GeForce GTX 1060 graphic card
