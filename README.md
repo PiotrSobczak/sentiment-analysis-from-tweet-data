@@ -80,10 +80,11 @@ Comparable results but were achieved using no-bidirectional, but with two-layer 
 ```
 
 ## Results
-My system achieved the following results on sentiment140 dataset.
-Accuracy on validation set: 85,21[%]
-Accuracy on test set: 84,53[%]
+My system achieved the following results on sentiment140 dataset.   
+Accuracy on validation set: **85,21[%]**   
+Accuracy on test set: **84,53[%]**
 
+**Related works results on sentiment140 dataset:**
 
 <img src="https://github.com/PiotrSobczak/emotion-recognition-from-speech/blob/master/assets/results.png" width="600"></img>
 
