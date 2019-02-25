@@ -1,6 +1,9 @@
 ## What is the purpose of this project?
 The purpose of this project is creating end to end system for emotion recognition from speech. The system will have multi-modal architecture consisting of acoustic and linguistic paths.
 
+## Hardware
+The training was conducted using GeForce GTX 1060 graphic card
+
 ## Data
 
 <img src="https://github.com/PiotrSobczak/emotion-recognition-from-speech/blob/master/assets/data.png" width="600"></img>
@@ -54,25 +57,27 @@ set.
 Comparable results but were achieved using no-bidirectional, but with two-layer lstm.
 
 ## Sentiment Classifier Demo   
-[yes] 0.466 sentiment :)  
-[yes ! ! !] 0.989 sentiment :)  
-[no] -0.987 sentiment :(  
-[no ! ! !] -0.925 sentiment :(  
-[i like cars deadly] 0.992 sentiment :)  
-[this car is like deadly] -0.96 sentiment :(  
-[feeling well] 0.569 sentiment :)  
-[not feeling well] -1.0 sentiment :(  
-[not , i'm feeling well] 0.973 sentiment :)  
-[he is cool] 1.0 sentiment :)  
-[he thinks he is cool] 0.999 sentiment :)  
-[he thinks he is cool , but he is not] -0.958 sentiment :(  
-[a puppy that was born recently was put to sleep] -0.086 sentiment :(  
-[a puppy was put to sleep] -0.483 sentiment :(  
-[a puppy that was born recently was euthanized] -0.931 sentiment :(  
-[a puppy that was born happy recently was euthanized] -0.707 sentiment :(  
-[put to sleep] 0.689 sentiment :)  
-[i put my puppy to sleep] -0.47 sentiment :(  
-[i put my daughter to sleep] 0.093 sentiment :)  
+```diff
++ [yes] 0.466 sentiment :)  
++ [yes ! ! !] 0.989 sentiment :)  
+- [no] -0.987 sentiment :(  
+- [no ! ! !] -0.925 sentiment :(  
++ [i like cars deadly] 0.992 sentiment :)  
+- [this car is like deadly] -0.96 sentiment :(  
++ [feeling well] 0.569 sentiment :)  
+- [not feeling well] -1.0 sentiment :(  
++ [not , i'm feeling well] 0.973 sentiment :)  
++ [he is cool] 1.0 sentiment :)  
++ [he thinks he is cool] 0.999 sentiment :)  
+- [he thinks he is cool , but he is not] -0.958 sentiment :(  
+- [a puppy that was born recently was put to sleep] -0.086 sentiment :(  
+- [a puppy was put to sleep] -0.483 sentiment :(  
+- [a puppy that was born recently was euthanized] -0.931 sentiment :(  
+- [a puppy that was born happy recently was euthanized] -0.707 sentiment :(  
++ [put to sleep] 0.689 sentiment :)  
+- [i put my puppy to sleep] -0.47 sentiment :(  
++ [i put my daughter to sleep] 0.093 sentiment :)  
+```
 
 ## Results
 My system achieved the following results on sentiment140 dataset.
